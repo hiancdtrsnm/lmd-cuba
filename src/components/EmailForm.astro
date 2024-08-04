@@ -1,0 +1,131 @@
+---
+
+---
+
+<div class="form-group">
+    <div class="form-group__column">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required />
+
+        <label for="apellido">Primer Apellido:</label>
+        <input type="text" id="apellido" name="apellido" required />
+    </div>
+    <div class="form-group__column">
+        <label for="segundoApellido">Segundo Apellido:</label>
+        <input
+            type="text"
+            id="segundoApellido"
+            name="segundoApellido"
+            required
+        />
+
+        <label for="ci">Carnet de Identidad</label>
+        <input
+            type="text"
+            id="ci"
+            name="ci"
+            pattern="\d{11}"
+            minlength="11"
+            maxlength="11"
+            required
+        />
+    </div>
+</div>
+
+<p id="result"></p>
+
+<button id="composeEmail">Enviar</button>
+
+<script>
+    // Update result each time a part of the form is changed
+    const nombre = document.getElementById("nombre");
+    const apellido = document.getElementById("apellido");
+    const segundoApellido = document.getElementById("segundoApellido");
+    const ci = document.getElementById("ci");
+    const result = document.getElementById("result");
+    const composeEmail = document.getElementById("composeEmail");
+
+    nombre.addEventListener("input", updateResult);
+    apellido.addEventListener("input", updateResult);
+    segundoApellido.addEventListener("input", updateResult);
+    ci.addEventListener("input", updateResult);
+
+    function updateResult() {
+        // the result component is each element of the inputs, without tildes and with - converted to spaces join by ;
+        result.textContent = `${nombre.value
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/ /g, "-")};${apellido.value
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/ /g, "-")};${segundoApellido.value
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/ /g, "-")};${ci.value}`;
+
+        // If all inputs are filled, enable the button
+        if (
+            nombre.value &&
+            apellido.value &&
+            segundoApellido.value &&
+            ci.value
+        ) {
+            composeEmail.disabled = false;
+        } else {
+            composeEmail.disabled = true;
+        }
+    }
+
+    // When the button is clicked, open the email client with the result as the body and "CTIA LMD" as the subject to this email cog.lahabana.lmdsol1@maec.es
+    composeEmail.addEventListener("click", () => {
+        const subject = "CITA%20LMD";
+        const body = result.textContent;
+        const email = result.textContent;
+        // needs to convert the the space to url
+        window.location.href = `mailto:cog.lahabana.lmdsol1@maec.es?subject=${subject}&body=${body}`;
+    });
+</script>
+
+<style>
+    .form-group {
+        display: flex;
+        gap: 3px;
+
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: calc(1.5rem - 1px);
+    }
+
+    .form-group__column {
+        display: flex;
+        gap: 3px;
+        flex-direction: column;
+        display: flex;
+        flex-direction: column;
+        flex-grow: 1;
+    }
+
+    label {
+        display: block;
+    }
+
+    input {
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        border: none;
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+    }
+
+    button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+    }
+</style>
