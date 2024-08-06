@@ -2,16 +2,19 @@
 
 ---
 
-<div class="form-group">
-    <div class="form-group__column">
-        <label for="nombre">Nombre:</label>
+<form id="EmailForm">
+    <h3 class="form-header">
+        Inserta aqui tus datos y obten el formato correcto para enviar el Email
+    </h3>
+    <div class="form-group">
+        <label id="nombre_label" for="nombre">Nombre:</label>
         <input type="text" id="nombre" name="nombre" required />
 
-        <label for="apellido">Primer Apellido:</label>
+        <label id="apellido_label" for="apellido">Primer Apellido:</label>
         <input type="text" id="apellido" name="apellido" required />
-    </div>
-    <div class="form-group__column">
-        <label for="segundoApellido">Segundo Apellido:</label>
+        <label id="segundoApellido_label" for="segundoApellido"
+            >Segundo Apellido:</label
+        >
         <input
             type="text"
             id="segundoApellido"
@@ -19,22 +22,31 @@
             required
         />
 
-        <label for="ci">Carnet de Identidad</label>
+        <label id="ci_label" for="ci">Carnet de Identidad: </label>
         <input
             type="text"
             id="ci"
             name="ci"
-            pattern="\d{11}"
+            inputmode="numeric"
+            pattern="[0-9\s]{11}"
             minlength="11"
             maxlength="11"
+            placeholder="xxxxxxxxxxx"
             required
         />
     </div>
-</div>
 
-<p id="result"></p>
+    <p id="result">;;;</p>
 
-<button id="composeEmail">Enviar</button>
+    <div class="buttons-row">
+        <input
+            id="composeEmailinput"
+            type="submit"
+            value="Enviar Correo con mis Datos"
+        ></input>
+        <button type="button" id="copyContent">Copiar contenido del Email</button>
+    </div>
+</form>
 
 <script>
     // Update result each time a part of the form is changed
@@ -52,57 +64,161 @@
 
     function updateResult() {
         // the result component is each element of the inputs, without tildes and with - converted to spaces join by ;
-        result.textContent = `${nombre.value
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/ /g, "-")};${apellido.value
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/ /g, "-")};${segundoApellido.value
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/ /g, "-")};${ci.value}`;
-
-        // If all inputs are filled, enable the button
-        if (
-            nombre.value &&
-            apellido.value &&
-            segundoApellido.value &&
-            ci.value
-        ) {
-            composeEmail.disabled = false;
-        } else {
-            composeEmail.disabled = true;
+        function processText(input) {
+            // Normalize input and temporarily replace "ñ" and "Ñ" with placeholders
+            return input
+                .replace(/ñ/g, "\uFFFF") // Use a placeholder for lowercase "ñ"
+                .replace(/Ñ/g, "\uFFFE") // Use a placeholder for uppercase "Ñ"
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Remove diacritical marks
+                .replace(/\uFFFF/g, "ñ") // Restore lowercase "ñ" from placeholder
+                .replace(/\uFFFE/g, "Ñ") // Restore uppercase "Ñ" from placeholder
+                .replace(/-/g, " ") // Replace hyphens with spaces
+                .trim()
+                .split(/[\s,\t,\n]+/)
+                .join(" ")
+                .toUpperCase(); // Convert to uppercase
         }
+
+        result.textContent = `${processText(nombre.value)};${processText(apellido.value)};${processText(segundoApellido.value)};${ci.value}`;
     }
 
-    // When the button is clicked, open the email client with the result as the body and "CTIA LMD" as the subject to this email cog.lahabana.lmdsol1@maec.es
-    composeEmail.addEventListener("click", () => {
-        const subject = "CITA%20LMD";
+    // Capture the submit event to prevent the form from being sent and send the email instead
+    const form = document.getElementById("EmailForm");
+    form.addEventListener("submit", (event) => {
+
+        // validate data present in all form fields and the ci field has 11 characters and only numbers
+        if (nombre.value === "" || apellido.value === "" || segundoApellido.value === "" || ci.value === "" || ci.value.length !== 11 || !/^\d+$/.test(ci.value)) {
+            alert("Por favor, llena todos los campos y asegurate de que el Carnet de Identidad tenga 11 digitos y solo numeros");
+            event.preventDefault();
+            return;
+        }
+
+        event.preventDefault();
+        const subject = "CITAS%20LMD";
         const body = result.textContent;
         const email = result.textContent;
         // needs to convert the the space to url
         window.location.href = `mailto:cog.lahabana.lmdsol1@maec.es?subject=${subject}&body=${body}`;
     });
+
+    const copyContent = document.getElementById("copyContent");
+    copyContent.addEventListener("click", () => {
+        if (nombre.value === "" || apellido.value === "" || segundoApellido.value === "" || ci.value === "" || ci.value.length !== 11 || !/^\d+$/.test(ci.value)) {
+            alert("Por favor, llena todos los campos y asegurate de que el Carnet de Identidad tenga 11 digitos y solo numeros");
+            return;
+        }
+
+        alert("Contenido copiado al portapapeles\n Recuarda pegarlo en el cuerpo del correo con el asunto 'CITAS LMD'");
+        navigator.clipboard.writeText(result.textContent);
+
+
+    });
+
+    // When the button is clicked, open the email client with the result as the body and "CTIA LMD" as the subject to this email cog.lahabana.lmdsol1@maec.es
 </script>
 
 <style>
-    .form-group {
+    .form-header {
+        text-align: justify;
+        font-size: 1.5rem;
+        padding: 1em 0;
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+    }
+
+    #EmailForm {
+        background-color: #ece6ff;
+        border-radius: 20px;
         display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 1em 0;
+        padding-bottom: 1em;
+    }
+
+    #EmailForm > * {
+        width: 90%;
+    }
+
+    .form-group {
+        display: grid;
         gap: 3px;
 
-        flex-direction: row;
-        flex-wrap: wrap;
         padding: calc(1.5rem - 1px);
+        grid-template-areas: "nombre_label apellido_label" "nombre_input apellido_input" "segundoApellido_label ci_label" "segundoApellido_input ci_input";
+        grid-column-gap: 1em;
+    }
+
+    #nombre_label {
+        grid-area: nombre_label;
+    }
+    #apellido_label {
+        grid-area: apellido_label;
+    }
+    #segundoApellido_label {
+        grid-area: segundoApellido_label;
+    }
+    #ci_label {
+        grid-area: ci_label;
+    }
+    #nombre {
+        grid-area: nombre_input;
+    }
+    #apellido {
+        grid-area: apellido_input;
+    }
+    #segundoApellido {
+        grid-area: segundoApellido_input;
+    }
+    #ci {
+        grid-area: ci_input;
+    }
+
+    @media screen and (max-width: 450px) {
+        .form-group {
+            grid-template-areas: "nombre_label" "nombre_input" "apellido_label" "apellido_input" "segundoApellido_label" "segundoApellido_input" "ci_label" "ci_input";
+            width: 80%;
+        }
+    }
+
+    #result {
+        padding: 1em;
+        background-color: white;
+        border-radius: 10px;
+        min-width: 10em;
+        min-height: 1.5em;
+        text-align: center;
+        max-width: 270px;
+        max-height: 100em;
+        word-wrap: break-word;
+        margin-bottom: 1em;
     }
 
     .form-group__column {
         display: flex;
         gap: 3px;
         flex-direction: column;
-        display: flex;
-        flex-direction: column;
         flex-grow: 1;
+    }
+
+    .buttons-row {
+        display: flex;
+        flex-direction: row-reverse;
+        gap: 1em;
+        align-items: center;
+        flex-grow: 1;
+        width: 90%;
+    }
+
+    .buttons-row > * {
+        width: 100%;
+    }
+
+    @media screen and (max-width: 500px) {
+        .buttons-row {
+            flex-direction: column-reverse;
+        }
     }
 
     label {
@@ -115,13 +231,15 @@
         border: 1px solid #ccc;
     }
 
-    button {
-        padding: 0.5rem 1rem;
+    button,
+    input[type="submit"] {
+        padding: 1em;
         border-radius: 0.25rem;
         border: none;
         background-color: #007bff;
         color: white;
         cursor: pointer;
+        /* margin: 0.25em; */
     }
 
     button:disabled {
