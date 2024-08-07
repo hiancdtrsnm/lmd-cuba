@@ -99,7 +99,7 @@
         const body = result.textContent;
         const email = result.textContent;
         // needs to convert the the space to url
-        window.location.href = `mailto:cog.lahabana.lmdsol1@maec.es?subject=${subject}&body=${body}`;
+        window.location.href = `mailto:cog.lahabana.lmdsol1@maec.es?subject=${subject}&body=${body.trim()}&cc=`;
     });
 
     const copyContent = document.getElementById("copyContent");
